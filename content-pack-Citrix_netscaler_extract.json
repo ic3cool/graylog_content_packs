@@ -1,0 +1,925 @@
+{
+  "v": 1,
+  "id": "b930c458-dfd5-4886-bdf9-d434218d5800",
+  "rev": 1,
+  "name": "Citrix Netscaler extract",
+  "summary": "extract,streams,Grok,pipelines",
+  "description": "",
+  "vendor": "daniel.jensen@outlook.com",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "df896a7f-51a6-47cd-87ad-0fe83b6bb1ac",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CitrixNetscalerCONN_TERMINATE extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CONN_TERMINATE extract"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"CitrixNetscalerCONN_TERMINATE extract\"\nwhen\n    has_field(\"message\")\nthen\n    let mess = to_string($message.message);\n    let parsed = grok(pattern: \"%{CitrixNetscalerCONN_TERMINATE}\", value: mess, only_named_captures: true);\n    set_fields(parsed);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "bd58567d-fa66-404e-ace3-e0b1e44df415",
+      "data": {
+        "name": "CitrixNetscalerREWRITE",
+        "pattern": "<%{NONNEGINT:priority;int}> %{YEAR:citrix_year}/%{MONTHNUM2:citrix_month}/%{MONTHDAY:citrix_day}:%{TIME:citrix_time}  %{HOSTNAME:hostname_short} %{SYSLOGPROG} : %{WORD:citrix_facility} %{WORD:citrix_feature} %{WORD:citrix_message} %{NUMBER:citrix_messageID:int} %{NUMBER:citrix_messageID2:int} :  .*Source %{IP:source_ip} - .*backend_service %{NOTSPACE:backend_service} - .*Destination %{IP:destination_ip} - .*Http_type %{WORD:citrix_http_type} - .*http_verb %{WORD:http_verb} - .*http_request_uri %{URIPATHPARAM:http_request_uri} - .*LBVS %{WORD:citrix_LBVS}"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "4383e6fa-56b0-434c-94ee-5e0d04077807",
+      "data": {
+        "name": "CitrixNetscalerCMD_EXECUTED",
+        "pattern": "<%{NONNEGINT:priority:int}> %{YEAR:citrix_year}/%{MONTHNUM2:citrix_month}/%{MONTHDAY:citrix_day}:%{TIME:citrix_time}  %{HOSTNAME:hostname_short} %{SYSLOGPROG} : %{WORD:citrix_facility} %{WORD:citrix_feature} %{WORD:citrix_message} %{NUMBER:citrix_messageID:int} %{NUMBER:citrix_messageID2:int} :  .*User %{WORD:citrix_username} - .*Remote_ip %{IP:remote_ip} - %{GREEDYDATA:citrix_commands}"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "65af749d-d873-41bb-93d0-f5f3104940bd",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler REWRITE"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler REWRITE"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Citrix Netscaler REWRITE\"\nwhen\n    contains(to_string($message.message), \" default REWRITE Message \", true)\nthen\n    route_to_stream(name: \"Citrix Netscaler\", remove_from_default: true);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "stream",
+        "version": "1"
+      },
+      "id": "dbced972-ecc1-43d9-9bbe-5c13bbd32268",
+      "data": {
+        "alarm_callbacks": [],
+        "outputs": [],
+        "remove_matches": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler"
+        },
+        "stream_rules": [],
+        "alert_conditions": [],
+        "matching_type": {
+          "@type": "string",
+          "@value": "OR"
+        },
+        "disabled": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Netscaler syslog"
+        },
+        "default_stream": {
+          "@type": "boolean",
+          "@value": false
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "b5663bb9-c9d4-4e33-a3b9-ad7a6efd6217",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CitrixNetscalerSSL_HANDSHAKE_SUCCESSbackend extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler SSL_HANDSHAKE_SUCCESSbackend extract"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"CitrixNetscalerSSL_HANDSHAKE_SUCCESSbackend extract\"\nwhen\n    has_field(\"message\")\nthen\n    let mess = to_string($message.message);\n    let parsed = grok(pattern: \"%{CitrixNetscalerSSL_HANDSHAKE_SUCCESSbackend}\", value: mess, only_named_captures: true);\n    set_fields(parsed);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "a74da094-a2b6-405b-a588-2ad82182b40e",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler SSL_HANDSHAKE_SUCCESS"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler SSL_HANDSHAKE_SUCCESS"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Citrix Netscaler SSL_HANDSHAKE_SUCCESS\"\nwhen\n    contains(to_string($message.message), \" default SSLLOG SSL_HANDSHAKE_SUCCESS \", true)\nthen\n    route_to_stream(name: \"Citrix Netscaler\", remove_from_default: true);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3f40ef30-d67f-4619-9d25-1a61646dfb28",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CitrixNetscalerCMD_EXECUTED extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CMD_EXECUTED extract"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"CitrixNetscalerCMD_EXECUTED extract\"\nwhen\n    has_field(\"message\")\nthen\n    let mess = to_string($message.message);\n    let parsed = grok(pattern: \"%{CitrixNetscalerCMD_EXECUTED}\", value: mess, only_named_captures: true);\n    set_fields(parsed);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3da33e61-69d3-4885-a9bf-e728dd95aeaa",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CONN_DELINK"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CONN_DELINK"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Citrix Netscaler CONN_DELINK\"\nwhen\n    contains(to_string($message.message), \" default TCP CONN_DELINK \", true)\nthen\n    route_to_stream(name: \"Citrix Netscaler\", remove_from_default: true);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline",
+        "version": "1"
+      },
+      "id": "e925bc51-f58d-4bb9-8d76-f377b43ebd31",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "pipeline \"Citrix Netscaler extract\"\nstage 0 match either\nrule \"Citrix Netscaler CMD_EXECUTED\"\nrule \"Citrix Netscaler CONN_DELINK\"\nrule \"Citrix Netscaler CONN_TERMINATE\"\nrule \"Citrix Netscaler REWRITE\"\nrule \"Citrix Netscaler SSL_HANDSHAKE_SUCCESS\"\nstage 1 match either\nrule \"CitrixNetscalerCONN_TERMINATE extract\"\nrule \"CitrixNetscalerCONN_DELINK extract\"\nrule \"CitrixNetscalerCMD_EXECUTED extract\"\nrule \"CitrixNetscalerREWRITE extract\"\nrule \"CitrixNetscalerSSL_HANDSHAKE_SUCCESSbackend extract\"\nrule \"CitrixNetscalerSSL_HANDSHAKE_SUCCESSclient extract\"\nend"
+        },
+        "connected_streams": [
+          {
+            "@type": "string",
+            "@value": "000000000000000000000001"
+          },
+          {
+            "@type": "string",
+            "@value": "dbced972-ecc1-43d9-9bbe-5c13bbd32268"
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "6b974b70-b1e5-4c35-9b38-93afc68202c3",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CMD_EXECUTED"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CMD_EXECUTED"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Citrix Netscaler CMD_EXECUTED\"\nwhen\n    contains(to_string($message.message), \" default API CMD_EXECUTED \", true)\nthen\n    route_to_stream(name: \"Citrix Netscaler\", remove_from_default: true);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "0858e2c3-9347-4e56-891a-56002cd1adf4",
+      "data": {
+        "name": "CitrixNetscalerCONN_TERMINATE",
+        "pattern": "<%{NONNEGINT:priority:int}> %{YEAR:citrix_year}/%{MONTHNUM2:citrix_month}/%{MONTHDAY:citrix_day}:%{TIME:citrix_time}  %{HOSTNAME:hostname_short} %{SYSLOGPROG} : %{WORD:citrix_facility} %{WORD:citrix_feature} %{WORD:citrix_message} %{NUMBER:citrix_messageID:int} %{NUMBER:citrix_messageID2:int} : .*Source %{IP:source_ip}:%{NUMBER:source_port:int} - .*Destination %{IP:destination_ip}:%{NUMBER:destination_port:int} - .*Start\\s*Time %{YEAR:citrix_start_time_year}/%{MONTHNUM2:citrix_start_time_month}/%{MONTHDAY:citrix_start_time_day}:%{TIME:citrix_start_time_time}  - .*End\\s*Time %{YEAR:citrix_end_time_year}/%{MONTHNUM2:citrix_end_time_month}/%{MONTHDAY:citrix_end_time_day}:%{TIME:citrix_end_time_time}  - .*Total_bytes_send %{NUMBER:citrix_total_bytes_send:int} - *Total_bytes_recv %{NUMBER:citrix_total_bytes_recv:int}"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3857e685-4583-419f-ba01-254f9362cd04",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CitrixNetscalerCONN_DELINK extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CONN_DELINK extract"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"CitrixNetscalerCONN_DELINK extract\"\nwhen\n    has_field(\"message\")\nthen\n    let mess = to_string($message.message);\n    let parsed = grok(pattern: \"%{CitrixNetscalerCONN_DELINK}\", value: mess, only_named_captures: true);\n    set_fields(parsed);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "e472b994-001e-476a-be22-b0070d94951a",
+      "data": {
+        "name": "CitrixNetscalerSSL_HANDSHAKE_SUCCESSclient",
+        "pattern": "<%{NONNEGINT:priority;int}> %{YEAR:citrix_year}/%{MONTHNUM2:citrix_month}/%{MONTHDAY:citrix_day}:%{TIME:citrix_time}  %{HOSTNAME:hostname_short} %{SYSLOGPROG} : %{WORD:citrix_facility} %{WORD:citrix_feature} %{WORD:citrix_message} %{NUMBER:citrix_messageID:int} %{NUMBER:citrix_messageID2:int} :  .*SPCBId %{NUMBER:citrix_SPCBId:int} - .*ClientIP %{IP:source_ip} - .*ClientPort %{NUMBER:source_port:int} - .*VserverServiceIP %{IP:citrix_Vserver_ip} - .*VserverServicePort %{NUMBER:citrix_Vserver_port:int} - .*ClientVersion %{NOTSPACE:citrix_client_TLSv} - .*CipherSuite %{NOTSPACE:citrix_client_CipherSuite} - .*Session %{WORD:citrix_session_status}  - .*HandshakeTime %{NUMBER:msecs:float} .*ms"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "369e55e4-048c-4399-ab05-a66e4edaef62",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CONN_TERMINATE"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler CONN_TERMINATE"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Citrix Netscaler CONN_TERMINATE\"\nwhen\n    contains(to_string($message.message), \" default TCP CONN_TERMINATE \", true)\nthen\n    route_to_stream(name: \"Citrix Netscaler\", remove_from_default: true);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "dcf84a68-202f-4a7a-9b18-f55c706aaf7a",
+      "data": {
+        "name": "CitrixNetscalerCONN_DELINK",
+        "pattern": "<%{NONNEGINT:priority;int}> %{YEAR:citrix_year}/%{MONTHNUM2:citrix_month}/%{MONTHDAY:citrix_day}:%{TIME:citrix_time}  %{HOSTNAME:hostname_short} %{SYSLOGPROG} : %{WORD:citrix_facility} %{WORD:citrix_feature} %{WORD:citrix_message} %{NUMBER:citrix_messageID:int} %{NUMBER:citrix_messageID2:int} :  .*Source %{IP:source_ip}:%{NUMBER:source_port:int} - .*Vserver %{IP:citrix_Vserver_ip}:%{NUMBER:citrix_Vserver_port:int} - .*NatIP %{IP:citrix_Nat_ip}:%{NUMBER:citrix_Nat_port:int} - .*Destination %{IP:destination_ip}:%{NUMBER:destination_port:int} - .*Delink\\s*Time %{YEAR:citrix_start_time_year}/%{MONTHNUM2:citrix_start_time_month}/%{MONTHDAY:citrix_start_time_day}:%{TIME:citrix_start_time_time}  - .*Total_bytes_send %{NUMBER:citrix_total_bytes_send:int} - *Total_bytes_recv %{NUMBER:citrix_total_bytes_recv:int}"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3ecefda1-c79b-4827-9d92-dd7d93c8f30c",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CitrixNetscalerSSL_HANDSHAKE_SUCCESSclient extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler SSL_HANDSHAKE_SUCCESSclient extract"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"CitrixNetscalerSSL_HANDSHAKE_SUCCESSclient extract\"\nwhen\n    has_field(\"message\")\nthen\n    let mess = to_string($message.message);\n    let parsed = grok(pattern: \"%{CitrixNetscalerSSL_HANDSHAKE_SUCCESSclient}\", value: mess, only_named_captures: true);\n    set_fields(parsed);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "20eb610d-f8e7-406e-8600-d6bce26622de",
+      "data": {
+        "name": "CitrixNetscalerSSL_HANDSHAKE_SUCCESSbackend",
+        "pattern": "<%{NONNEGINT:priority;int}> %{YEAR:citrix_year}/%{MONTHNUM2:citrix_month}/%{MONTHDAY:citrix_day}:%{TIME:citrix_time}  %{HOSTNAME:hostname_short} %{SYSLOGPROG} : %{WORD:citrix_facility} %{WORD:citrix_feature} %{WORD:citrix_message} %{NUMBER:citrix_messageID:int} %{NUMBER:citrix_messageID2:int} :  .*Backend\\s*SPCBId %{NUMBER:citrix_SPCBId:int} - .*ServerIP %{IP:destination_ip} - .*ServerPort %{NUMBER:destination_port:int} - .*ProtocolVersion %{NOTSPACE:citrix_protocol_TLSv} - .*CipherSuite %{NOTSPACE:citrix_client_CipherSuite} - .*Session %{WORD:citrix_session_status} - %{NOTSPACE:citrix_server_auth} -.*SerialNumber %{NOTSPACE:citrix_serialnumber} - .*SignatureAlgorithm %{NOTSPACE:citrix_SignatureAlgorithm} - .*ValidFrom %{GREEDYDATA:citrix_validfrom} - .*ValidTo %{GREEDYDATA:citrix_validto} - .*HandshakeTime %{NUMBER:msecs:float} .*ms"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "4c1335dd-b164-4a4f-a360-af570186ef57",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CitrixNetscalerREWRITE extract"
+        },
+        "description": {
+          "@type": "string",
+          "@value": "Citrix Netscaler REWRITE extract"
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"CitrixNetscalerREWRITE extract\"\nwhen\n    has_field(\"message\")\nthen\n    let mess = to_string($message.message);\n    let parsed = grok(pattern: \"%{CitrixNetscalerREWRITE}\", value: mess, only_named_captures: true);\n    set_fields(parsed);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "388813ee-9b45-4a35-b751-91f50833f24b",
+      "data": {
+        "name": "WORD",
+        "pattern": "\\b\\w+\\b"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "284cfe0c-71f1-4f8d-80fa-c45b299397e7",
+      "data": {
+        "name": "NUMBER",
+        "pattern": "(?:%{BASE10NUM})"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "27d5573f-b7e9-4066-9637-fc89c2c8cd95",
+      "data": {
+        "name": "SYSLOGPROG",
+        "pattern": "%{PROG:program}(?:\\[%{POSINT:pid}\\])?"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "41f28272-6a0c-46ee-951e-361ed2658142",
+      "data": {
+        "name": "YEAR",
+        "pattern": "(?>\\d\\d){1,2}"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "30857900-2ea3-44b9-b56d-3a4877d9b3bc",
+      "data": {
+        "name": "HOSTNAME",
+        "pattern": "\\b(?:[0-9A-Za-z][0-9A-Za-z-]{0,62})(?:\\.(?:[0-9A-Za-z][0-9A-Za-z-]{0,62}))*(\\.?|\\b)"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "08c5c3fc-de57-4f57-8339-619143faa3a1",
+      "data": {
+        "name": "NOTSPACE",
+        "pattern": "\\S+"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "3f7bfaf3-97f6-4377-aa68-5b159fae4a61",
+      "data": {
+        "name": "MONTHNUM2",
+        "pattern": "(?:0[1-9]|1[0-2])"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "ebc0900f-f14e-43f7-8788-a92635b208db",
+      "data": {
+        "name": "IP",
+        "pattern": "(?:%{IPV6}|%{IPV4})"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "f8665df1-7997-41ea-8e0d-b63892373c8c",
+      "data": {
+        "name": "URIPATHPARAM",
+        "pattern": "%{URIPATH}(?:%{URIPARAM})?"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "99dd62d5-0f9d-455d-9607-6509b2efff5d",
+      "data": {
+        "name": "NONNEGINT",
+        "pattern": "\\b(?:[0-9]+)\\b"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "4f517d5e-79ad-4335-91ec-a5fc84bf782a",
+      "data": {
+        "name": "TIME",
+        "pattern": "(?!<[0-9])%{HOUR}:%{MINUTE}(?::%{SECOND})(?![0-9])"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "53e19183-4107-48e0-9ef2-ecfc8db32788",
+      "data": {
+        "name": "MONTHDAY",
+        "pattern": "(?:(?:0[1-9])|(?:[12][0-9])|(?:3[01])|[1-9])"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "1d97402e-f568-4960-a4a8-5f46934ce2a5",
+      "data": {
+        "name": "GREEDYDATA",
+        "pattern": ".*"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "bd91a38d-9bc4-4a52-856f-5ce7ec6a0d1c",
+      "data": {
+        "name": "BASE10NUM",
+        "pattern": "(?<![0-9.+-])(?>[+-]?(?:(?:[0-9]+(?:\\.[0-9]+)?)|(?:\\.[0-9]+)))"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "99b49a1c-3c5e-4fc5-8e92-ea42cca9de9e",
+      "data": {
+        "name": "POSINT",
+        "pattern": "\\b(?:[1-9][0-9]*)\\b"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "ad47d061-aac1-48ff-930a-bf6319cf750f",
+      "data": {
+        "name": "PROG",
+        "pattern": "[\\x21-\\x5a\\x5c\\x5e-\\x7e]+"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "768b2dd2-652a-4618-8474-9bab06970199",
+      "data": {
+        "name": "IPV6",
+        "pattern": "((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))(%.+)?"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "6c55d63b-7011-4f40-9537-b76c6523a312",
+      "data": {
+        "name": "IPV4",
+        "pattern": "(?<![0-9])(?:(?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])[.](?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])[.](?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])[.](?:[0-1]?[0-9]{1,2}|2[0-4][0-9]|25[0-5]))(?![0-9])"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "08b500bd-3800-48b7-9581-4f4173dc0e76",
+      "data": {
+        "name": "URIPATH",
+        "pattern": "(?:/[A-Za-z0-9$.+!*'(){},~:;=@#%_\\-]*)+"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "26e2e828-815f-4d8a-a255-acc2392889e8",
+      "data": {
+        "name": "URIPARAM",
+        "pattern": "\\?[A-Za-z0-9$.+!*'|(){},~@#%&/=:;_?\\-\\[\\]<>]*"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "a6805141-d936-4c0d-b3f8-58d79131f1ed",
+      "data": {
+        "name": "HOUR",
+        "pattern": "(?:2[0123]|[01]?[0-9])"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "74349c7c-e41f-4936-a90e-354a09cde59f",
+      "data": {
+        "name": "MINUTE",
+        "pattern": "(?:[0-5][0-9])"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "grok_pattern",
+        "version": "1"
+      },
+      "id": "3af02b35-2c8e-484a-85f2-ca3ed3e8d100",
+      "data": {
+        "name": "SECOND",
+        "pattern": "(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?)"
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.0.8+6b8c55d"
+        }
+      ]
+    }
+  ]
+}
